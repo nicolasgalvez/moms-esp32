@@ -36,7 +36,11 @@ user_program();
 
 #define SSID_LENGTH 40
 
+#ifdef ESP32_CAM
+#define WIFI_SET_PIN 12
+#else
 #define WIFI_SET_PIN 21
+#endif
 
 int record_rst_time();
 void nvs_test();

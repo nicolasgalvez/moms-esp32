@@ -3,7 +3,7 @@
 
 WiFiServer server(80);
 int client_count = 0;
-
+int start_onboarding();
 int record_rst_time()
 {
     esp_err_t err;
@@ -53,6 +53,7 @@ int record_rst_time()
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("The value is not initialized yet!\n");
+            start_onboarding();
             break;
         default:
             printf("Error (%s) reading!\n", esp_err_to_name(err));
@@ -175,6 +176,7 @@ void check_wifi(char *ssid, char *password)
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("The value is not initialized yet!\n");
+            start_onboarding();
             break;
         default:
             printf("Error (%s) reading!\n", esp_err_to_name(err));
@@ -221,7 +223,7 @@ int wifi_config_server()
 
     if (client) // if you get a client,
     {
-        
+
         Serial.println("---------------------------------------------------");
         Serial.printf("Index:%d\n", client_count);
         client_count++;
@@ -248,7 +250,7 @@ int wifi_config_server()
                         client.println();
 
                         // the content of the HTTP response follows the header:
-                        client.print((char*)html_wifi_setup_html);
+                        client.print((char *)html_wifi_setup_html);
                         // client.print("<h1>NickLabs</h1><br><h2>ESP32 WIFI CONFIG</h2><br>");
                         // client.print("Click <a href=\"/wifi_set\">here</a> to set WIFI.<br>");
 
@@ -329,6 +331,18 @@ int wifi_config_server()
     return 1;
 }
 
+int start_onboarding()
+{
+    Serial.println("Please connect \"NickLabs_AP\".");
+    Serial.println("And visit 192.168.4.1 to set WIFI.");
+    ap_init();
+    while (wifi_config_server())
+        ;
+    delay(3000);
+    esp_restart();
+    return 0;
+}
+
 void set_wifi_from_url(String get_url)
 {
     // get_url = "http://192.168.4.1/set_over?ssid=NickLabs&password=20160704"
@@ -375,15 +389,7 @@ int wifi_set_main()
     {
         if (digitalRead(WIFI_SET_PIN) == LOW)
         {
-
-            Serial.println("Please connect \"NickLabs_AP\".");
-            Serial.println("And visit 192.168.4.1 to set WIFI.");
-            ap_init();
-            while (wifi_config_server())
-                ;
-            delay(3000);
-            esp_restart();
-            return 0;
+            return start_onboarding();
         }
         Serial.print(".");
         delay(100);
