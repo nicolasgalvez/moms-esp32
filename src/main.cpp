@@ -85,7 +85,7 @@ void sendHeartBeat()
     HTTPClient http;
     
     uint64_t macAddress =  ESP.getEfuseMac();
-    String fullRoute = serverName + "/heartbeat";
+    String fullRoute = serverName + "heartbeat";
 
     // Your Domain name with URL path or IP address with path
     http.begin(client, fullRoute);
