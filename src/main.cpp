@@ -8,7 +8,7 @@ const uint64_t uS_TO_S_FACTOR = 1000000;  // Conversion factor for micro seconds
 const uint64_t TIME_TO_SLEEP = 15;  // Time ESP32 will go to sleep (in seconds)
 
 // GPIO where the DS18B20 temp sensor is connected to
-const int oneWireBus = 4;
+const int oneWireBus = 2;
 
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire oneWire(oneWireBus);
