@@ -9,16 +9,14 @@
 #include "root_ca.h"
 
 // Domain Name with full URL Path for HTTP POST Request
-String serverName = "https://rat-rave.databowie.com/api/";
-
-
+String serverName = "https://rat-rave.databowie.com/api/"; 
 
 String my_Api_key = "EnterYourApiKey";
 
 // Time to sleep in microseconds to sleep
 const uint64_t uS_TO_S_FACTOR = 1000000; // Conversion factor for micro seconds to seconds
 // TODO: replace with NVRAM setting, allow setting rate through web interface
-const uint64_t TIME_TO_SLEEP = 15 * 60; // Time ESP32 will go to sleep (in seconds)
+const uint64_t TIME_TO_SLEEP = 5 * 60; // Time ESP32 will go to sleep (in seconds)
 
 // GPIO where the DS18B20 temp sensor is connected to
 const int oneWireBus = 2;

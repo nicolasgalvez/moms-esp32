@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if no arguments or help flag is provided
+if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "Usage: $0 <hostname>"
+    echo "This script retrieves the root certificate from the specified hostname and saves it as a header file."
+    exit 0
+fi
+
 OUTPUT_DIR="include"
 
 # Ensure the output directory exists
