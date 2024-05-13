@@ -6,8 +6,11 @@
 #include <iostream>
 #include "esp_wifi.h"
 #include <string>
+#include "root_ca.h"
+
 // Domain Name with full URL Path for HTTP POST Request
 String serverName = "https://rat-rave.databowie.com/api/";
+
 
 
 String my_Api_key = "EnterYourApiKey";
@@ -81,14 +84,16 @@ void sendHeartBeat()
         return;
     }
 
-    WiFiClient client;
+    WiFiClientSecure *client = new WiFiClientSecure;
     HTTPClient http;
     
     uint64_t macAddress =  ESP.getEfuseMac();
     String fullRoute = serverName + "heartbeat";
 
+    client->setCACert(root_ca_pem);
+    // client->setInsecure();
     // Your Domain name with URL path or IP address with path
-    http.begin(client, fullRoute);
+    http.begin(*client, fullRoute);
 
     // If you need Node-RED/server authentication, insert user and password below
     // http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
