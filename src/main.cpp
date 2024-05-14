@@ -1,4 +1,4 @@
-#include "wifi_save.h"
+#include <Wifi_save.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <HTTPClient.h>
@@ -7,9 +7,12 @@
 #include "esp_wifi.h"
 #include <string>
 #include "root_ca.h"
+#include "motion_cam.h"
+#include "soc/soc.h"           // Disable brownout problems
+#include "soc/rtc_cntl_reg.h"  // Disable brownout problems
 
 // Domain Name with full URL Path for HTTP POST Request
-String serverName = "https://rat-rave.databowie.com/api/"; 
+String serverName = "https://rat-rave.databowie.com/api/";
 
 String my_Api_key = "EnterYourApiKey";
 
@@ -27,14 +30,23 @@ OneWire oneWire(oneWireBus);
 // Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature sensors(&oneWire);
 
+// REPLACE WITH YOUR TIMEZONE STRING: https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+String myTimezone = "PST8PDT,M3.2.0,M11.1.0";
+
+// Timing without delay:
+unsigned long time_now = 0;
+
 void getSensorData();
 void sendHeartBeat();
-
+void initTime(String timezone);
+void setTimezone(String timezone);
 
 void setup()
 {
-    
+    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+    time_now = millis();
     Serial.begin(115200);
+    delay(2000);
     Serial.println("Attempt to connect to wifi");
     // Set wakeup conditions
 
@@ -54,11 +66,15 @@ void setup()
     {
         Serial.println("Connect WIFI FAULT");
     }
+    // Initialize time with timezone
+    initTime(myTimezone); 
     sensors.begin();
 
     // Get sensor and/or perform other tasks. Then back to bed.
     getSensorData();
     sendHeartBeat();
+    capturePicture();
+
     esp_deep_sleep_start();
     Serial.println("This will never be printed");
 }
@@ -84,8 +100,8 @@ void sendHeartBeat()
 
     WiFiClientSecure *client = new WiFiClientSecure;
     HTTPClient http;
-    
-    uint64_t macAddress =  ESP.getEfuseMac();
+
+    uint64_t macAddress = ESP.getEfuseMac();
     String fullRoute = serverName + "heartbeat";
 
     client->setCACert(root_ca_pem);
@@ -99,7 +115,7 @@ void sendHeartBeat()
     // Specify content-type header
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     // Data to send with HTTP POST
-    String httpRequestData = "api_key="+my_Api_key+"&device_id="+macAddress+"&status=ok";
+    String httpRequestData = "api_key=" + my_Api_key + "&device_id=" + macAddress + "&status=ok";
     // Send HTTP POST request
     int httpResponseCode = http.POST(httpRequestData);
     Serial.println(httpRequestData);
@@ -123,4 +139,28 @@ void sendHeartBeat()
 void loop()
 {
     Serial.println("loop");
+}
+
+// Function to set timezone
+void setTimezone(String timezone)
+{
+    Serial.printf("  Setting Timezone to %s\n", timezone.c_str());
+    setenv("TZ", timezone.c_str(), 1); //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
+    tzset();
+}
+
+// Connect to NTP server and adjust timezone
+void initTime(String timezone)
+{
+    struct tm timeinfo;
+    Serial.println("Setting up time");
+    configTime(0, 0, "pool.ntp.org"); // First connect to NTP server, with 0 TZ offset
+    if (!getLocalTime(&timeinfo))
+    {
+        Serial.println(" Failed to obtain time");
+        return;
+    }
+    Serial.println("Got the time from NTP");
+    // Now we can set the real timezone
+    setTimezone(timezone);
 }
